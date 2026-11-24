@@ -70,15 +70,66 @@ function RemedyPage(){
   const language=params.get('lang')||'en'; const [data,setData]=useState(null);const [loading,setLoading]=useState(true);const [error,setError]=useState('');
   useEffect(()=>{let active=true;setLoading(true);setError('');setData(null);getRemedy(disease,language).then(result=>{if(active)setData(result)}).catch(err=>{if(!active)return;setError(err.response?.data?.error||'We couldn’t reach your wellness guide right now. Please try again in a moment.')}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[disease,language]);
   return <main className="results-page"><div className="results-top"><div className="results-wrap"><Link to="/" className="back-link"><ArrowLeft size={15}/> All topics</Link><div className="results-title"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR WELLNESS NOTES</div><h1>A little support for<br/><em>{decodeURIComponent(disease)}.</em></h1></div><div className="result-language"><span>PLAN LANGUAGE</span><select aria-label="Plan language" value={language} onChange={e=>navigate(`/remedy/${encodeURIComponent(disease)}?lang=${e.target.value}`)}>{languages.map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></div></div><SearchBox compact initial={decodeURIComponent(disease)} onSearch={v=>{if(v.trim())navigate(`/remedy/${encodeURIComponent(v.trim())}?lang=${language}`)}}/></div></div>
-    <div className="results-wrap results-content"><AnimatePresence mode="wait">{loading?<motion.div key="loading" initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0}}><LoadingPlan/></motion.div>:error?<motion.div key="error" className="error-panel" initial={{opacity:0}} animate={{opacity:1}}><CircleAlert size={27}/><h2>We hit a small pause.</h2><p>{error}</p><button className="cta-button" onClick={()=>navigate(0)}>Try again <ArrowRight size={16}/></button><small>The API returns this message when generation fails or its AI key is unavailable.</small></motion.div>:data?<motion.div key={disease+language} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:.35}}><div className="wellness-note"><span><Sparkles size={17}/></span><div><strong>A note for your wellbeing</strong><p>{data.ayurvedicAnalysis||data.healthTip}</p></div><span className="note-side">A GENTLE PLACE TO START</span></div>
-      <div className="results-columns"><div className="main-results"><section className="result-section"><div className="result-section-head"><div><span className="eyebrow">01 · DAILY CARE</span><h2>A small thing to try</h2></div><span className="round-section-icon"><Sun size={18}/></span></div><div className="tip-card"><span className="tip-line"/><p>{data.healthTip||'Take a moment to rest, hydrate and notice what your body needs today.'}</p></div></section>
-      <section className="result-section"><div className="result-section-head"><div><span className="eyebrow">02 · FROM THE KITCHEN</span><h2>Home remedies</h2></div><span className="count-label">{(data.homeRemedies||[]).length} IDEAS</span></div><div className="remedy-list">{(data.homeRemedies||[]).map((remedy,i)=><RemedyCard key={i} remedy={remedy} index={i}/>)}</div>{!data.homeRemedies?.length&&<p className="empty-note">No home remedies were included in this plan.</p>}</section>
+    <div className="results-wrap results-content"><AnimatePresence mode="wait">{loading?<motion.div key="loading" initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0}}><LoadingPlan/></motion.div>:error?<motion.div key="error" className="error-panel" initial={{opacity:0}} animate={{opacity:1}}><CircleAlert size={27}/><h2>We hit a small pause.</h2><p>{error}</p><button className="cta-button" onClick={()=>navigate(0)}>Try again <ArrowRight size={16}/></button><small>The API returns this message when generation fails or its AI key is unavailable.</small></motion.div>:data?<motion.div key={disease+language} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:.35}}><div className="wellness-note"><span><Sparkles size={17}/></span><div><strong>A note for your wellbeing</strong><p>{data.ayurvedicAnalysis||data.summary||data.healthTip}</p></div><span className="note-side">A GENTLE PLACE TO START</span></div>
+      <div className="results-columns"><div className="main-results"><section className="result-section"><div className="result-section-head"><div><span className="eyebrow">01 · DAILY CARE</span><h2>A small thing to try</h2></div><span className="round-section-icon"><Sun size={18}/></span></div><div className="tip-card"><span className="tip-line"/><p>{data.healthTip||data.summary||'Take a moment to rest, hydrate and notice what your body needs today.'}</p></div></section>
+      <section className="result-section"><div className="result-section-head"><div><span className="eyebrow">02 · FROM THE KITCHEN</span><h2>Home remedies</h2></div><span className="count-label">{(data.homeRemedies||data.remedies||[]).length} IDEAS</span></div><div className="remedy-list">{(data.homeRemedies||data.remedies||[]).map((remedy,i)=><RemedyCard key={i} remedy={remedy} index={i}/>)}</div>{!(data.homeRemedies||data.remedies)?.length&&<p className="empty-note">No home remedies were included in this plan.</p>}</section>
       <section className="result-section"><div className="result-section-head"><div><span className="eyebrow">03 · GENTLE MOVEMENT</span><h2>Move & breathe</h2></div><span className="round-section-icon icon-sage"><Activity size={18}/></span></div><div className="yoga-list">{(data.yoga||[]).map((pose,i)=><YogaCard key={i} pose={pose} index={i}/>)}</div>{!data.yoga?.length&&<p className="empty-note">No movement ideas were included in this plan.</p>}</section></div>
-      <aside className="side-results"><div className="doctor-card"><div className="doctor-icon"><ShieldCheck size={20}/></div><span className="eyebrow">WHEN TO SEEK CARE</span><h3>Listen to your body.</h3><p>{data.doctorAdvice||'If your symptoms persist or concern you, speak with a qualified healthcare professional.'}</p><div className="doctor-rule"/><small>Professional care is always the right next step when you need it.</small></div><div className="side-reminder"><span>✳</span><p>These ideas are here to support your wellbeing, alongside advice from your healthcare professional.</p></div></aside></div><div className="results-end"><Flower2 size={17}/> WISHING YOU A LITTLE MORE EASE</div></motion.div>:null}</AnimatePresence></div><Footer/></main>
+      <aside className="side-results"><div className="doctor-card"><div className="doctor-icon"><ShieldCheck size={20}/></div><span className="eyebrow">WHEN TO SEEK CARE</span><h3>Listen to your body.</h3><p>{data.doctorAdvice||data.safetyNote||'If your symptoms persist or concern you, speak with a qualified healthcare professional.'}</p><div className="doctor-rule"/><small>Professional care is always the right next step when you need it.</small></div><div className="side-reminder"><span>✳</span><p>These ideas are here to support your wellbeing, alongside advice from your healthcare professional.</p></div></aside></div><div className="results-end"><Flower2 size={17}/> WISHING YOU A LITTLE MORE EASE</div></motion.div>:null}</AnimatePresence></div><Footer/></main>
 }
 
-function RemedyCard({remedy,index}){const [open,setOpen]=useState(index===0);return <article className={`remedy-card ${open?'remedy-open':''}`}><button className="remedy-toggle" onClick={()=>setOpen(!open)} aria-expanded={open}><span className="remedy-number">{String(index+1).padStart(2,'0')}</span><span className="remedy-title-wrap"><strong>{remedy.remedyName||'Home remedy'}</strong><small>{remedy.ingredients?.length||0} ingredients <i/> {remedy.preparationSteps?.length||0} steps</small></span><span className="accordion-chevron">⌄</span></button>{open&&<div className="remedy-body"><div><span className="eyebrow">WHAT YOU’LL NEED</span><ul className="ingredient-list">{(remedy.ingredients||[]).map((item,i)=><li key={i}><Check size={13}/>{item}</li>)}</ul></div><div><span className="eyebrow">HOW TO PREPARE</span><ol className="steps-list">{(remedy.preparationSteps||[]).map((step,i)=><li key={i}><span>{String(i+1).padStart(2,'0')}</span>{step}</li>)}</ol></div></div>}</article>}
+function RemedyCard({remedy,index}){
+  const [open,setOpen]=useState(index===0);
+  const name = remedy.remedyName || remedy.title || 'Ayurvedic Remedy';
+  const ingredients = remedy.ingredients || [];
+  const steps = remedy.preparationSteps || remedy.steps || [];
 
-function YogaCard({pose,index}){const query=pose.youtubeSearchQuery||`${pose.asanaName} yoga tutorial`;return <article className="yoga-card"><span className="yoga-index">{String(index+1).padStart(2,'0')}</span><div className="yoga-content"><div className="yoga-title-row"><h3>{pose.asanaName||'Mindful movement'}</h3><span className="duration"><Clock3 size={13}/>{pose.duration||'A few minutes'}</span></div><ol className="yoga-steps">{(pose.howToDo||[]).map((step,i)=><li key={i}><span>{i+1}</span>{step}</li>)}</ol><a className="video-link" href={`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`} target="_blank" rel="noreferrer"><span><Play size={12} fill="currentColor"/></span> Find a guided video <ArrowUpRight size={13}/></a></div></article>}
+  return <article className={`remedy-card ${open?'remedy-open':''}`}>
+    <button className="remedy-toggle" onClick={()=>setOpen(!open)} aria-expanded={open}>
+      <span className="remedy-number">{String(index+1).padStart(2,'0')}</span>
+      <span className="remedy-title-wrap">
+        <strong>{name}</strong>
+        <small>{ingredients.length} ingredients <i/> {steps.length} steps</small>
+      </span>
+      <span className="accordion-chevron">⌄</span>
+    </button>
+    {open&&<div className="remedy-body">
+      <div>
+        <span className="eyebrow">WHAT YOU’LL NEED</span>
+        <ul className="ingredient-list">
+          {ingredients.map((item,i)=><li key={i}><Check size={13}/>{typeof item==='object'&&item!==null?`${item.amount?item.amount+' ':''}${item.name||''}`.trim():String(item)}</li>)}
+        </ul>
+      </div>
+      <div>
+        <span className="eyebrow">HOW TO PREPARE</span>
+        <ol className="steps-list">
+          {steps.map((step,i)=><li key={i}><span>{String(i+1).padStart(2,'0')}</span>{step}</li>)}
+        </ol>
+      </div>
+    </div>}
+  </article>
+}
+
+function YogaCard({pose,index}){
+  const asanaName = pose.asanaName || pose.title || 'Mindful movement';
+  const duration = pose.duration || (pose.durationMinutes ? `${pose.durationMinutes} min` : '5-10 min');
+  const steps = pose.howToDo || pose.steps || [];
+  const query = pose.youtubeSearchQuery || `${asanaName} yoga tutorial`;
+
+  return <article className="yoga-card">
+    <span className="yoga-index">{String(index+1).padStart(2,'0')}</span>
+    <div className="yoga-content">
+      <div className="yoga-title-row">
+        <h3>{asanaName}</h3>
+        <span className="duration"><Clock3 size={13}/>{duration}</span>
+      </div>
+      <ol className="yoga-steps">
+        {steps.map((step,i)=><li key={i}><span>{i+1}</span>{step}</li>)}
+      </ol>
+      <a className="video-link" href={`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`} target="_blank" rel="noreferrer">
+        <span><Play size={12} fill="currentColor"/></span> Find a guided video <ArrowUpRight size={13}/>
+      </a>
+    </div>
+  </article>
+}
 
 export default function App(){const [apiState,setApiState]=useState('checking');useEffect(()=>{getApiStatus().then(res=>setApiState(res.status==='ok'?'online':'offline')).catch(()=>setApiState('offline'))},[]);return <><Header/><div className="api-indicator"><span className={apiState==='online'?'status-online':''}/>{apiState==='checking'?'Connecting':apiState==='online'?'Guide connected':'Guide unavailable'}</div><Routes><Route path="/" element={<Home/>}/><Route path="/remedy/:disease" element={<RemedyPage/>}/><Route path="*" element={<Home/>}/></Routes></>}
