@@ -10,7 +10,22 @@ const remedyRoutes = require("./routes/remedyRoutes");
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow non-browser clients and local development, plus configured deployments.
+      if (!origin || process.env.NODE_ENV !== "production" || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Origin is not allowed by CORS"));
+    },
+  }),
+);
 app.use(express.json());
 
 // connect to mongo
@@ -49,10 +64,13 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", message: "api is running" });
 });
 
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 // check app version
 app.get("/api/version", (req, res) => {
   res.json({
-    latestVersion: "1.1.0",
     latestVersion: "1.2.0",
     minVersion: "1.0.0",
     releaseNotes: [

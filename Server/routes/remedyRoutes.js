@@ -151,12 +151,10 @@ router.get("/:disease", async (req, res) => {
         return res.json(aiResponse);
       } catch (aiError) {
         console.error("Gemini AI failed:", aiError.message);
-        return res.status(500).json({ error: "AI Generation failed and mock data is disabled." });
-        // fallback to mock data
+        // fall through to mock data below
       }
     } else {
-      console.log("No valid GEMINI_API_KEY configured");
-      return res.status(500).json({ error: "No API Key configured." });
+      console.log("No valid GEMINI_API_KEY configured, falling back to mock data");
     }
 
     // fallback to mock data
