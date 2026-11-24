@@ -18,10 +18,26 @@ const LANG_NAMES = {
   pa: 'Punjabi', or: 'Odia', ur: 'Urdu', as: 'Assamese', sa: 'Sanskrit',
 };
 
-const generateAIResponse = async (disease, lang = 'en', retries = 3) => {
+// Wrap a promise with a hard timeout so Render's 90s request window is never breached.
+const withTimeout = (promise, ms, label) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${ms}ms`)),
+      ms
+    );
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+
+const generateAIResponse = async (disease, lang = 'en', retries = 2) => {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: { responseMimeType: "application/json" },
+    model: "gemini-2.0-flash",          // 2.5-flash is deprecated (Dec 2026); 2.0-flash is stable & fast
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.4,
+    },
   });
   const langName = LANG_NAMES[lang] || 'English';
   console.log(`asking gemini in ${langName}`);
@@ -45,7 +61,12 @@ Keep it concise and authentic.`;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const result = await model.generateContent(prompt);
+      // Hard 55-second cap per attempt — leaves room for retries within Render's 90s window
+      const result = await withTimeout(
+        model.generateContent(prompt),
+        55000,
+        `gemini attempt ${attempt + 1}`
+      );
       let text = result.response.text();
 
       // Clean up markdown formatting if present
@@ -84,8 +105,8 @@ Keep it concise and authentic.`;
           err.message.includes("RESOURCE_EXHAUSTED") ||
           err.message.includes("overloaded"))
       ) {
-        const waitTime = (attempt + 1) * 10000; // 10s, 20s, 30s
-        console.log("rate limit hit, waiting...");
+        const waitTime = (attempt + 1) * 5000; // 5s, 10s — shorter to stay within timeout budget
+        console.log(`rate limit hit, waiting ${waitTime}ms...`);
         await delay(waitTime);
       } else {
         throw err;
