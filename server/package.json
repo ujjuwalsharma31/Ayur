@@ -11,6 +11,9 @@
     "test": "node --test",
     "test:gemini": "node scripts/smokeGemini.js"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@google/genai": "^3.6.1",
     "mongoose": "^8.20.0",

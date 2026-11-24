@@ -14,7 +14,7 @@ const envPaths = [
 ]
 
 for (const envPath of envPaths) {
-  if (fs.existsSync(envPath)) {
+  if (fs.existsSync(envPath) && typeof process.loadEnvFile === 'function') {
     try {
       process.loadEnvFile(envPath)
     } catch {}
